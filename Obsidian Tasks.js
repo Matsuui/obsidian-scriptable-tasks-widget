@@ -61,16 +61,16 @@ function createWidget(tasks, today, displayTasks, textSize, maxLen, widgetHeight
     } else {
       //Else add the items from the clippeditems, only including up to 18 and adding See More... if more
       
-      //Add each task, including links if necassary and add link to bullet point
+      //Add each task, including links if necessary and add a link to the bullet point
       tasks[task] = tasks[task].slice(0, maxLen).map((itemArray)  => {
         item = itemArray[0]
       	let addTask = stack.addStack();
         addTask.lineLimit = 1;
         
-        let imageManager = FileManager.iCloud();
+        let imageManager = FileManager.local(); // Use local file manager
         let imagePath = imageManager.bookmarkedPath("Scriptable")
-        let imageOne = imageManager.downloadFileFromiCloud(imagePath + `/Complete.png`);
-        let imageTwo = imageManager.downloadFileFromiCloud(imagePath + `/Incomplete.png`);
+        let imageOne = imageManager.readImage(imagePath + `/Complete.png`);
+        let imageTwo = imageManager.readImage(imagePath + `/Incomplete.png`);
         
         if (itemArray[4] == today) {
           let bullet = addTask.addImage(imageManager.readImage(imagePath + `/Complete.png`));
@@ -81,7 +81,7 @@ function createWidget(tasks, today, displayTasks, textSize, maxLen, widgetHeight
           bullet.imageSize = new Size(textSize*1.25,textSize*1.25);
         	bullet.url = URLScheme.forRunningScript() + `?openEditor=false&uriLaunch=true&task=${encodeURIComponent(itemArray[0])}&dateDue=${encodeURIComponent(itemArray[1])}&filePath=${encodeURIComponent(itemArray[2])}&lineNumber=${itemArray[3]}&complete=true`;
         }
-        //When a task has a link (website or note link), make sure link is interactable, and rest of task is not)
+        //When a task has a link (website or note link), make sure the link is interactable, and the rest of the task is not)
       	if (linkRegex.test(item)) {
           let before = addTask.addText(item.replace(linkRegex, "$1"))
    	  	  before.font = Font.systemFont(textSize);
@@ -90,7 +90,6 @@ function createWidget(tasks, today, displayTasks, textSize, maxLen, widgetHeight
           
         	if (item.replace(linkRegex, "$2")) {
 	          let link = addTask.addText(item.replace(linkRegex, "$2"))
-            //filePath = item.replace(linkRegex, "$2").replaceAll(" ", "%2520") + ".md"
             link.url = `obsidian://advanced-uri?vault=${vault}&filepath=` + item.replace(linkRegex, "$2").replaceAll(" ", "%2520") + ".md"
             link.textColor = new Color("#7e1dfb");
           	link.font = Font.semiboldRoundedSystemFont(textSize);
@@ -114,7 +113,7 @@ function createWidget(tasks, today, displayTasks, textSize, maxLen, widgetHeight
           line.lineLimit = 1;
         }
         
-        //For measuring length of widget to add a spacer later to make sure widget stays aligned to top
+        //For measuring the length of the widget to add a spacer later to make sure the widget stays aligned to the top
         widgetLength += textSize*1.25
         if (widgetLength > widgetMaxLength) {
           widgetMaxLength = widgetLength
@@ -122,7 +121,7 @@ function createWidget(tasks, today, displayTasks, textSize, maxLen, widgetHeight
         
       	return item;
       });
-      //Add a see more... button if there are more tasks available
+      //Add a "See more..." button if there are more tasks available
       if (tasks[task].length < taskListLength) {
         let more = stack.addText("See more...")
         more.font = Font.semiboldRoundedSystemFont(textSize);
@@ -144,11 +143,11 @@ function createWidget(tasks, today, displayTasks, textSize, maxLen, widgetHeight
 }
 
 
-// This is the main function to comb through my folder structure for every daily note- Comb each note for something that matches a regex "- [ ] xxx" with out without an ending date "YYYY-MM-DD"
+// This is the main function to comb through my folder structure for every daily note- Comb each note for something that matches a regex "- [ ] xxx" with or without an ending date "YYYY-MM-DD"
 async function findTasks(today) {
   
   //Set up file manager, finds the amount of Year folders in the Daily Notes folder and sets up storage arrays
-  let fileManager = FileManager.iCloud();
+  let fileManager = FileManager.local(); // Use local file manager
   let years = await fileManager.listContents(fileManager.bookmarkedPath(root));
   let overdueTasks = [];
   let todayTasks = [];
@@ -170,9 +169,9 @@ async function findTasks(today) {
           let files = await fileManager.listContents(fileManager.bookmarkedPath(root)+ "/" + year + "/" + month);
           for (let file of files) {
             
-            //Download file from icloud, read contents, split by line, store file path
-            let downloadFile = await fileManager.downloadFileFromiCloud(fileManager.bookmarkedPath(root)+ "/" + year + "/" + month + "/" + file);
-            let fileContents = await fileManager.readString(fileManager.bookmarkedPath(root)+ "/" + year + "/" + month + "/" + file);
+            //Download file from local storage, read contents, split by line, store file path
+            let filePath = fileManager.bookmarkedPath(root) + "/" + year + "/" + month + "/" + file;
+            let fileContents = await fileManager.readString(filePath);
             let lines = fileContents.split("\n");
             let originalTaskPath = "/" + year + "/" + month + "/" + file
             let lineIndex = 0
@@ -294,8 +293,8 @@ if (config.runsInWidget) {
   Script.complete();
 } else if (uriArguments.uriLaunch) {
   App.close();
-  let fileManager = FileManager.iCloud();
-  let downloadFile = await fileManager.downloadFileFromiCloud(fileManager.bookmarkedPath(root) + uriArguments.filePath);
+  let fileManager = FileManager.local(); // Use local file manager
+  let downloadFile = await fileManager.downloadFile(fileManager.bookmarkedPath(root) + uriArguments.filePath);
   let fileLines = fileManager.readString(fileManager.bookmarkedPath(root) + uriArguments.filePath);
   fileLines = fileLines.split("\n");
   let replaceRegex = new RegExp(`- \\[[ x]\\] ${uriArguments.task.replaceAll("\[", "\\[").replaceAll("\]", "\\]").replaceAll("\(", "\\(").replaceAll("\)", "\\)")}.*📅.*${uriArguments.dateDue}.*`)
