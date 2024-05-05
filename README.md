@@ -1,6 +1,7 @@
-This script is a modified version of the original. This version uses local files instead of iCloud. This works great for local-only vaults, Syncthing setups, and possibly Obsidian Sync.
+This script is a modified version of the original. This version uses local files instead of iCloud. This works great for local-only vaults, Syncthing setups, and possibly Obsidian Sync although I haven't tried that.
 
 
+# Original README Below
 # obsidian-scriptable-tasks-widget
 ![A5927A3A-60DE-4A3A-8324-114FDF7CA5BB](https://user-images.githubusercontent.com/98095245/225629458-ec7bdbeb-2734-460a-ba18-7e3316a5894f.jpeg)
 
